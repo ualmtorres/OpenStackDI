@@ -71,10 +71,10 @@ Algunos de los servidores del Departamento de Informática, como los de control 
 
 === Plataforma de producción
 
-* Servidores de cómputo: 12
-* RAM disponible: 2.304 GB
-* Núcleos: 384
-* Espacio disponible para instancias: 32,4 TB
+* Servidores de cómputo: 16
+* RAM disponible: 3 TB
+* Núcleos: 512
+* Espacio disponible para instancias: 42,8 TB
 * Almacenamiento disponible para volúmenes: 21,7 TB
 
 === Plataforma de pruebas
@@ -325,11 +325,11 @@ Actualmente están disponibles las imágenes siguientes en OpenStack-DI:
 [width="100%",cols="^,^,^",options="header"]
 |====================
 | Image | Login | Modo de acceso
-| Ubuntu 16.04 LTS | ubuntu | Key Pair 
-| CentOS 6 | centos | Key Pair  
+| Ubuntu 16.04 LTS y Ubuntu 18.04 LTS | ubuntu | Key Pair 
+| CentOS 6 y Centos 7 | centos | Key Pair  
+| Fedora 27 | fedora | Key Pair 
 | cirros | cirros | Key Pair 
-| Xubuntu 16.04 LTS | clouduser | Contraseña 
-| Windows Server 2012 | Administrator | Contraseña 
+| Windows Server 2012 R2 | Administrator | Contraseña 
 |====================
 
 [NOTE]
@@ -467,17 +467,7 @@ chmod +x /usr/local/bin/docker-compose
 exit 0
 ----
 
-== Próximamente
-
-Actualmente tenemos en fase de prueba y listos para pasar a producción los siguientes componentes de OpenStack:
-
-* Orquestación de recursos OpenStack
-* Balancedor como servicio (LBaaS)
-* Almacenamiento de objetos 
-* Almacenamiento compartido de archivos
-* Servicio de telemetría y alarma
-* Contenedores como servicio (CaaS)
-* Framework de procesamiento Big Data
+Consulta https://github.com/ualmtorres/openstack-instaladores[otros scripts para aprovisionar máquinas virtuales Ubuntu durante su creación]
 
 == Recursos complementarios
 
