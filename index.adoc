@@ -27,7 +27,7 @@ image:di.png[]
 [abstract]
 == Resumen
 
-OpenStack-DI es el servicio de Infraestructura como servicio (IaaS) del Departamento de Informática de la Universidad de Almería. Actualmente ofrece servicios de máquinas virtuales y almacenamiento de volúmenes.
+OpenStack-DI es el servicio de Infraestructura como servicio (IaaS) del Departamento de Informática de la Universidad de Almería. Actualmente ofrece servicios de máquinas virtuales, almacenamiento como servicio (almacenamiento de bloques y volúmenes NFS) y balanceadores como servicio.
 
 OpenStack-DI además, es el soporte para el resto de servicios _cloud_ del Departamento (Cloud-DI), como son servidores virtuales para almacenamiento de archivos, gestión de proyectos, control de versiones, automatización de tareas y autenticación de usuarios.
 
@@ -52,7 +52,8 @@ OpenStack-DI es el proyecto de Cloud-DI que ofrece Infraestructura como servicio
 Actualmente, OpenStack-DI ofrece:
 
 * Servicios para la creación de Máquinas y laboratorios virtuales.
-* Servicios de Almacenamiento para la creación de volúmenes.
+* Servicios de Almacenamiento, tanto de bloques como volúmenes NFS.
+* Balanceadores como servicio.
 
 == Servicios que ofrece Cloud-DI
 
@@ -124,6 +125,23 @@ Se desplegará un menú en la izquierda. A continuación, selecciona `Change pas
 
 image::ChangePassword.png[]
 
+=== Generación de claves SSH
+
+Las claves SSH ofrecen una forma más segura de conexión remota ya que evitan la introducción de usuario y contraseña en los inicios de sesión, reduciendo el riesgo de ataques de fuerza bruta para descubrimiento de contraseñas. Además, suponen una opción más cómoda de inicio de sesión, ya que evitan el recordar las contraseñas en cada conexión.
+
+Las claves SSH se generan en pares, dando lugar a la clave privada y a la clave pública. La clave privada ha de ser protegida y no debe ser compartida con nadie. La clave pública puede ser compartida libremente y se insertará en las instancias en el momento de su creación.
+
+Para generar un par de claves SSH, ejecuta el comando siguiente en una terminal Linux o Mac. Para usuarios Windows se recomienda usar https://gitforwindows.org/[Git for Windows], disponible al instalar Git.
+
+`ssh-keygen`
+
+Si no indicamos otro nombre, esto genera dos archivos con los nombres `id_rsa` e `id_rsa.pub` que se almacenarán en la carpeta `home` del usuario en la rutas:
+
+* Clave privada: `/home/user/.ssh/id_rsa`
+* Clave pública: `/home/user/.ssh/id_rsa.pub`
+
+También se pedirá la introducción de una contraseña para el uso del par de claves. Por ahora, lo dejaremos sin contraseña.
+
 === Registra tus claves SSH
 
 Para el acceso SSH a máquinas virtuales Linux es necesario registrar la clave SSH pública en la cuenta de usuario OpenStack. Las clave pública SSH será inyectada a las instancias creadas en el proceso de inicialización. 
@@ -144,7 +162,7 @@ En el mismo formulario de importación de claves SSH aparecen los pasos a seguir
 +
 [TIP]
 ====
-Instala https://git-scm.com/download/win[Git for Windows,window=_blank] en tu sistema Windows. Este software, además de instalar Git para control de versiones, instalará Git BASH en tu sistema, un emulador BASH que te será muy útil para la conexión SSH a máquinas virtuales Linux desde tu sistema Windows.
+Si eres usuario de Windows, se recomienda instala https://git-scm.com/download/win[Git for Windows,window=_blank]. Este software, además de instalar Git para control de versiones, instalará Git BASH en tu sistema, un emulador BASH que te será muy útil para la conexión SSH a máquinas virtuales Linux desde tu sistema Windows.
 ====
 
 . Si no dispones de una clave SSH o bien no quieres o no puedes generarla, OpenStack puede crear tu par de claves. Para crear tu par de claves desde OpenStack pulsa el botón `Create Key Pair`. Introduce en el formulario el nombre que quieras a dar a tu clave SSH.
@@ -260,6 +278,19 @@ En máquinas Windows no es necesario inyectar la clave pública.
 Para más información sobre la creación de instancias consulta la  https://docs.openstack.org/ocata/user-guide/dashboard-launch-instances.html[Guía de uso oficial de OpenStack,window=_blank]
 ****
 
+=== Iniciar, reiniciar y apagar una máquina virtual
+
+Puedes iniciar, reiniciar y apagar una máquina virtual desplegando las acciones que aparecen a su lado en el listado de instancias del proyecto `Project | Compute | Instances`.
+
+* Iniciar instancia: `Start Instance`
+* Apagar instancia: `Shutoff Instance`
+* Reiniciar instancia: `Soft Reboot Instance` o `Hard Reboot Instance`
+
+[IMPORTANT]
+====
+No confundir `Shutoff Instance` con `Delete Instance`. `Shutoff instance` apaga la instancia. En cambio, `Delete Instance` la elimina y lo perderemos todo.
+====
+
 === Asignación de IP flotante
 
 Las instancias creadas son conectadas a una de las redes privadas de un proyecto OpensStack. Inicialmente, es posible la comunicación entre las instancias de dicha red. Pero de forma predeterminada, no es posible la conexión a la instancia creada desde nuestro equipo de trabajo, o en general, desde otro equipo que esté fuera de la red del proyecto en el que se ha creado la máquina virtual.
@@ -268,7 +299,7 @@ Podemos ver la instancia creada y conectada a la red del proyecto en el menú `P
 
 image::NetworkTopology.png[]
 
-Las IPs flotantes son la base para la comunicación con la instancia desde fuera de la red donde fue creada. Nuestro proyecto tiene una cuota de IPs flotantes y deberemos gestionarlas de forma eficiente.
+Las IPs flotantes son la base para la comunicación con la instancia desde el exterior. Nuestro proyecto tiene una cuota de IPs flotantes y deberemos gestionarlas de forma eficiente.
 
 Para asignar una IP flotante a una instancia, mostrar en primer lugar la lista de instancias (`Project | Compute | Instances`). A continuación, seleccionar `Associate Floating IP` en el menú desplegable de la instancia.
 
@@ -336,6 +367,56 @@ Actualmente están disponibles las imágenes siguientes en OpenStack-DI:
 ====
 Contacta con mailto:clouddi@ual.es[clouddi@ual.es] para obtener la contraseña para instancias en las que el modo de acceso no sea con Key Pair.
 ====
+
+=== Subir una imagen
+
+Normalmente la subida de imágenes es una tarea que se debe dejar a los técnicos de OpenStack-DI. No obstante, si se trata de imágenes sin interés para uso general, se pueden seguir estos pasos para tener una imagen disponible en el proyecto personal.
+
+Las imágenes se subirán en formato QCOW2 y OpenStack matiene una https://docs.openstack.org/image-guide/obtain-images.html[página con enlaces a descargas de imágenes] configuradas para ejecutarse en modo cloud (con el paquete `cloud-init`, soporte para el acceso mediante claves SSH e inyección de datos de usuario.
+
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Selecciona el proyecto en el que crear la imagen.
+. En el menú de la izquierda selecciona `Project | Compute | Images`.
+. Pulsa el botón `Create Image`.
+. En el formulario completa los datos siguientes:
+** Nombre de la imagen (p.e. `openSsure Leap 15.1`).
+** `Image Source: Introduce el archivo con la imagen descargada.
+** `Format`: Seleccionar `QCOW2`.
+** `Protected`: Indica si las configuraciones establecidas en `Rawdisk, Minimum Disk, Minimum RAM` pueden ser modificadas por otros usarios a los que le diéramos permiso de uso sobres esta imagen en el caso de hacerla pública.
+. Tras pulsar `Create Image` se procederá a la subida y creación de la imagen.
+
+La imagen aparecerá tras unos instantes en la lista de imágenes disponibles.
+
+=== Proteger/Desproteger una imagen
+
+En una imagen se puede proteger la configuración de parámetros como RAM y disco mínimo para poder crear instancias a partir de ella. Una imagen protegida impedirá que otros usuarios puedan modificar estos valores.
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Selecciona el proyecto en el que proteger la imagen.
+. En el menú de la izquierda selecciona `Project | Compute | Images`.
+. Selecciona la imagen a proteger, despliega el listbox de `Actions` y selecciona `Edit Image`.
+. Pulsa en los botones `Yes | No` de `Protected` en `Image Sharing`.
+. Aplica los cambios pulsando el botón `Update Image`.
+
+=== Crear snapshot de una instancia
+
+Un snapshot es una imagen creada a partir del estado del disco de una instancia a modo de fotografía de una instancia. El snapshot creado puede ser usado posteriormente para crear nuevas instancias, lo que lo hace una buena opción para la distribución de instancias con software preinstalado y configuraciones aplicadas.
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-SI,window=_blank].
+. Selecciona el proyecto en el que crear el snapshot.
+. En el menú de la izquierda selecciona `Project | Compute | Instances`.
+. Selecciona la instancia a la que crear el snapshot y selecciona `Create Snapshot` en el listbox de `Actions` de la instancia.
+
+Tras unos instantes, el snapshot estará creado y listo para ser replicado.
+
+[NOTE]
+====
+Los snapshots no son etiquetados como imágenes, sino como _snapshot images_ Es importante tener esto en cuenta porque a la hora de crear una instanncia a a partir de ellos, habrá que seleccionar _snapshot images_ como origen de la instancia en el Asistente para la creación de instancias.
+
+No obstante, esto se puede modificar cambiando los metadatos del snapshot, cambiando los valores de las propiedades `image_location` e `image_type` de `snapshot` por `image`.
+====
+
 == Uso de volúmenes en OpenStack-DI
 
 OpenStack ofrece un servicio de almacenamiento de bloques, lo que nos permite poder crear volúmenes y conectarlos a máquinas virtuales. Los volúmenes nos dan almacenamiento persistente, entendido como que el volumen se conserva a pesar de que se elimine la máquina virtual a la que está conectado.
@@ -391,9 +472,45 @@ A continuación sigue los pasos del sistema operativo en el que se haya conectad
 Para más información sobre la creación y administración de volúmenes consulta la  https://docs.openstack.org/ocata/user-guide/dashboard-manage-volumes.html[Guía de uso oficial de OpenStack,window=_blank]
 ****
 
+=== Desconexión de un volumen
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Selecciona el proyecto en el que está el volumen a desconectar.
+. En el menú de la izquierda selecciona `Project | Volumes`.
+. En la pestaña `Volumes` selecciona el volumen que quieras desconectar a una instancia, despliega el listbox de `Actions` y selecciona `Manage Attachments`.
+. Pulsa el botón `Detach Volume` para desconectar el volumen de la instancia
+
+image::DetachVolume.png[]
+
+A continuación aparecerá un cuadro de diálogo de confirmación. Pulsar el botón `Detach Volume` para liberar el volumen de la instancia.
+
+image::DetachVolumeConfirm.png[]
+
+=== Extender un volumen
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Selecciona el proyecto en el que está el volumen a desconectar.
+. En el menú de la izquierda selecciona `Project | Volumes`.
+
++
+[IMPORTANT]
+====
+Desconecta el volumen antes de ampliarlo.
+====
+
+. En la pestaña `Volumes` selecciona el volumen que quieras extender, despliega el listbox de `Actions` y selecciona `Extend Volume`.
+. Configura el nuevo tamaño del volumen en el formulario.
+
+image::ExtendVolume.png[]
+
 === Transferir un volumen a otro proyecto
 
 Un volumen sólo se puede utilizar en el proyecto al que pertence, pudiendo intercambiarse entre las distintas máquinas virtuales del proyecto. Sin embargo, hay situaciones en las que estamos interesados en usar un volumen en una instancia que tenemos en otro proyecto, o transferir el volumen a otro usuario de OpenStack-DI. Esta operación es la que se conoce como _Transferir un volumen_ en OpenStack.
+
+[NOTE]
+====
+Para transferir un volumen, éste ha de estar desconectado. Consulta la sección <<Desconexión de un volumen>>
+====
 
 . Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
 . Selecciona el proyecto en el que crear el volumen.
@@ -436,39 +553,550 @@ image:configuracion.png[]
 
 A continuacion, se muestra el script de configuración de Docker CE en una instancia Ubuntu durante su creación.
 
-[source, bash]
-----
-#!/bin/bash
+++++
+<script src="https://gist.github.com/ualmtorres/dec19ebed2981459f8e5677979eb04c3.js"></script>
+++++
 
-echo "Instalando Docker"
+=== Creación de una instancia con acceso mediante login y password
 
-apt-get update
-apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-apt-key fingerprint 0EBFCD88
-add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-apt-get update
-apt-get install -y docker-ce
-groupadd docker
-usermod -aG docker ubuntu
-systemctl enable docker
+Durante lo creación de una instancia introduce el código siguiente en el cuadro de texto `Customization Script` del paso `Configuration` del asistente de creación de instancias. 
 
-echo "Instalando Docker Compose"
-curl -L "https://github.com/docker/compose/releases/download/1.23.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
+image::InstanceConfiguration.png[]
 
-exit 0
-----
+Recuerda cambiar la contraseña de la línea 2.
 
+++++
+<script src="https://gist.github.com/ualmtorres/c3e7123d3e414e9e54ad4d3ee1051429.js"></script>
+++++
+
+[NOTE]
+====
 Consulta https://github.com/ualmtorres/openstack-instaladores[otros scripts para aprovisionar máquinas virtuales Ubuntu durante su creación]
+====
 
+== Almacenamiento compartido de archivos (NFS)
+
+OpenStack-DI permite la creación de volúmenes NFS y ser compartidos por varias instancias. Los volúmenes NFS nos dan almacenamiento persistente, de forma que el volumen se conserva a pesar de que se eliminen las máquinas virtuales a las que esté conectado.
+
+=== Creación de un volumen NFS
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Selecciona el proyecto en el que crear el volumen.
+. En el menú de la izquierda selecciona `Project | Compute | Shares`.
+. En en submenú `Shares` pulsa el botón `Create Share`.
+
++
+image::CreateShareButton.png[]
+
+. En el formulario introduce los valores para el nombre del volumen NFS, el tamaño y el tipo de volumen NFS (`default_share_type`). Mantener `NFS` como protocolo.
+
++
+image::CreateShare.png[]
+
+. Pulsa el botón `Create`.
+
+Tras unos instantes, el volumen NFS aparecerá en la lista de volúmenes creados y disponible para ser conectado a las instancias necesarias.
+
+=== Configuración de las reglas de acceso
+
+Una vez creado un volumen NFS, hay que configurar las reglas de acceso que permiten su uso desde las distintas instancias que lo tengan conectado. 
+
+[NOTE]
+====
+Es posible definir reglas de acceso diferentes para cada instancia (p.e. una instancia tiene acceso de lectura/escritura mientras que el resto sólo lo tienen de lectura).
+====
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Selecciona el proyecto en el está creado el volumen.
+. En el menú de la izquierda selecciona `Project | Compute | Shares`.
+. En en submenú `Shares` selecciona el volumen NFS que quieras configurar, despliega el listbox `Actions` y selecciona `Manage Rules`.
+
++
+image::SelectManageRules.png[]
+
+. Pulsa el botón `Add Rule`
+. Completa el formulario `Add Rule` con las reglas de acceso al volumen NFS. A continuación se muestra cómo dar acceso de lectura/escritura vía IP a la dirección IP `192.168.67.2`.
+
++
+image::AddShareRule.png[]
+
+. Pulsar `Add` para definir la regla de acceso.
+
+Aparerá la regla definida para el volumen NFS.
+
+image::ShareRuleDefined.png[]
+
+[NOTE]
+====
+Las reglas no se pueden modificar. Habrá que eliminarla y volver a crearla de nuevo
+====
+
+[TIP]
+====
+Para dar acceso a varias máquinas virtuales, basta con añadir nuevas reglas indicando la IP el nivel de acceso deseado.
+====
+
+=== Conexión de un volumen NFS a una instancia
+
+Una vez definidas las reglas de acceso a un volumen NFS procederemos a conectarlo a una instancia.
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Selecciona el proyecto en el que está creado el volumen NFS.
+. En el menú de la izquierda selecciona `Project | Compute | Share`.
+. En el submenú `Shares` haz clic sobre el nombre volumen NFS que quieras conectar a una instancia.
+. En la página aparecen los detalles definidos con las reglas de acceso. Copia el valor de `Path`. Este será el valor que usaremos en las instancias que monten este volumen.
+
++
+image::ShareDetails.png[]
+
+. Selecciona en el formulario la instancia a la que conectar el volumen y después pulsa el botón `Attach Volume`
+
+A continuación sigue los pasos del sistema operativo en el que se haya conectado el volumen para inicializarlo y usarlo (crear tabla de particiones, formatear, montar, …​)
+
+.Conexión de un volumen NFS en Ubuntu
+====
+```
+$ sudo apt install -y nfs-common <1>
+$ sudo mkdir /mnt/proyectos <2>
+$ sudo mount 192.168.64.17:/var/lib/manila/mnt/share-29ffbd8a-b1bc-403d-94b0-8b3f991aa0a4 /mnt/proyectos <3>
+```
+<1> Instalación de paquetes NFS
+<2> Creación del directorio donde montar el volumen NFS
+<3> Montar el volumen NFS en el directorio creado usando el `path` devuelto en las propiedades del volumen NFS.
+
+Podemos comprobar que el volumen está creado
+
+image::VolumenNFSMontado.png[]
+====
+
+.Consulta la guía de uso oficial de OpenStack
+****
+Para más información sobre la creación y administración de volúmenes NFS consulta la  https://docs.openstack.org/horizon/pike/user/manage-shares.htmll[Guía de uso oficial de OpenStack,window=_blank]
+****
+
+=== Extender un volumen NFS
+
+Los volúmenes NFS pueden ser extendidos y esta operación se puede hacer _en caliente_, sin necesidad de desconectar el volumen previamente.
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Selecciona el proyecto en el que está creado el volumen NFS.
+. En el menú de la izquierda selecciona `Project | Compute | Share`.
+. En el submenú `Shares` despliega el menú `Actions` del volumen NFS que quieras extender y selecciona `Extend Share`.
+. Define el nuevo tamaño del volumen y pulsa el botón `Extend`.
+
++
+image::ExtendShare.png[]
+
+Se puede comprobar que, tras extender el volumen, el espacio aparece disponible de inmediato.
+
+image::VolumenNFSExtendido.png[]
+
+=== Eliminar un volumen NFS
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Selecciona el proyecto en el que está creado el volumen NFS.
+. En el menú de la izquierda selecciona `Project | Compute | Share`.
+. Asegúrate que no hay instancias que estén usando el volumen NFS a eliminar.
+. En el submenú `Shares` despliega el menú `Actions` del volumen NFS que quieras eliminar y selecciona `Delete Share`.
+. Confirma su eliminación en el cuadro de diálogo.
+
+== Balanceadores como servicio (LBaaS)
+
+OpenStack-DI ofrece un servicio muy interesante para poder crear balanceadores de carga. Los balanceadores definidos podrán distribuir las peticiones entre cada uno de los miembros del conjunto de recursos balanceados. LBaaS nos pemitirá definir varios _pools_ de recursos, cada uno con sus miembros. En cada _pool_ se establecerá una política o método de balanceo a elegir entre _least connections, round robin_ o _source ip_.
+
+Para ilustrar su uso partimos de dos servidores Apache instalados en dos máquinas virtuales diferentes. Crearemos un balanceador con política de _round robin_.
+
+=== Creación de un balanceador
+
+1. Inicia sesión en http://openstack.di.ual.es/horizon[OpenStack-DI].
+
+1. Selecciona el proyecto en el que crear el balanceador.
+
+1. En el menú de la izquierda selecciona `Project | Network | Neutron Load Balancers`.
+
+1. Pulsa el botón `Create Load Balancer`.
+
+image::CreateLoadBalancerButton.png[]
+
+==== Paso 1. Configurar los detalles del balanceador
+
+En este paso estableceremos el nombre del balanceador y la red (p.e. la red del proyecto) donde se encuentran los recursos a balancear.
+
+image::LoadBalancerDetails.png[]
+
+==== Paso 2. Configurar los detalles del _listener_
+
+El _listener_ es el proceso que se encargar de comprobar las peticiones de acuerdo con el puerto y el protocolo que se configure.
+
+Para nuestro ejemplo configuraremos el protocolo `HTTP` y el puerto `80` y dejaremos el nombre de _listener_ predeterminado.
+
+image::ListenerDetails.png[]
+
+==== Paso 3. Configurar el método de balanceo del _pool_
+
+El _pool_ contiene la lista de miembros que sirven contenido a través del balanceador. En este paso se define el método que se utilizará para balancear eligiendo entre _least connections, round robin_ o _source ip_.
+
+Para nuestro ejemplo usaremos el método _round robin_ y dejaremos el nombre de _pool_ predeterminado.
+
+image::PoolDetails.png[]
+
+==== Paso 4. Configurar los miembros del _pool_
+
+En este paso añadiremos los miembros del _pool_, que en nuestro caso serán los dos servidores Apache. Para ello, se pulsa el botón `Add` del grupo de `Available Instances` sobre cada miembro que se quiera incorporar al _pool_. Los miembros seleccionados quedarán en el grupo `Allocated Members`. 
+
+También tendremos que definir el puerto de acceso a los miembros del _pool_. En nuestro caso será el 80.
+
+image::PoolMembers.png[]
+
+==== Paso 5. Configurar el monitor del _pool_
+
+Puede ocurrir que algunos miembros del _pool_ dejen de estar disponibles en cualquier momento. Para evitar dirigir peticiones a miembros no disponibles, se define un monitor, que comprueba periódicamente el estado de los miembros. Cuando un miembro deja de contestar se retira del _pool_ hasta que no vuelva a estar disponible.
+
+En este paso configuramos el tipo de monitorización (HTTP, ping o TCP), la cadencia de la monitorización, _timeout_ y el número de intentos antes de descartar del pool a un miembro.
+
+En nuestro ejemplo, elegiremos HTTP, lo que nos permitirá configurar otros parámetros específicos. como el método HTTP usado para la monitorización (p.e. `GET`), el código HTTP devuelto (p.e. 200) y el path pra la prueba (`/`).
+
+image::MonitorDetails.png[]
+
+Por último, pulsaremos el botón `Create Load Balancer` del asistente para proceder a crear el balanceador. En Horizon aparecerán los datos del balanceador creado. Si recargamos la página también veremos el _listener_ creado.
+
+image::BalanceadorCreado.png[]
+
+=== Configuración de una IP flotante para un balanceador
+
+Definiremos una dirección IP flotante al balanceador, que actuará como la dirección IP de acceso a los recursos balanceados. En nuestro caso, será la IP de acceso a los dos servidores Apache.
+
+image::LoadBalancerFloatingIP.png[]
+
+En el cuadro de diálogo indicaremos de dónde obtener la IP flotante, que normalmente será de la red externa.
+
+image::LoadBalancerRequestFloatingIP.png[]
+
+[NOTE]
+====
+Si hubiese direcciones IP flotantes libres en el proyecto, también apaecerían en desplegable de direcciones IP floatantes para el balanceador.
+====
+
+La dirección IP flotante asignada la podemos ver al hacer clic sobre el balanceador.
+
+image::LoadBalancerConFloatingIP.png[]
+
+=== Prueba del balanceador
+
+Para probar el balanceador, cambiaremos las páginas de inicio de los dos servidores Apache de forma que podamos comprobar que se está haciendo correctamente el balanceo entre los miembros del _pool_.
+
+[NOTE]
+====
+En Ubuntu, la página de inicio de Apache2 está en `/var/www/html/index.php`.
+====
+
+A continuación, al ir accediendo a la dirección IP del balanceador comprobaremos que de forma alternativa irá balanceando sobre los dos servidores Apache de acuerdo con la política de balanceo definida.
+
+image::ServidorApache1.png[]
+image::ServidorApache2.png[]
+
+=== Modificar el _pool_
+
+Se pueden añadir o retirar miembros del _pool_ de un balanceador. Tendremos que seguir estos pasos:
+
+1. Hacer clic sobre el balanceador en la lista de balanceadores disponibles.
+1. Hacer clic sobre el _listener_ en la lista de listeners del balanceador.
+1. Hacer clic en `Default Pool ID`.
+1. Pulsar el botón `Add/Remove Pool Members` para añadir o eliminar los miembros del _pool_.
+
+image::AddRemovePoolMembers.png[]
+
+=== Eliminación de un balanceador
+
+Un balanceador tiene una serie de objetos anidados en su interior (_listener, pool_ y _health monitor_). Para eliminar el balanceador habrá que eliminar dichos objetos desde dentro hacia afuera.
+
+Para ello, seguiremos estos pasos:
+
+1. Hacer clic sobre el balanceador en la lista de balanceadores disponibles.
+1. Hacer clic sobre el _listener_ en la lista de listeners del balanceador.
+1. Hacer clic en `Default Pool ID`.
+1. Haz clic en el `Health Monitor ID`.
+1. Despliega el menú del monitor y selecciona `Delete Health Monitor` y confirma los cambios.
+
++
+image::DeleteHealthMonitor.png[]
+
+1. Despliega el menú del _pool_, selecciona `Delete Pool` y confirma los cambios.
+1. Despliega el menú del _listener_, selecciona `Delete Listener` y confirma los cambios.
+1. Despliega el menú del balanceador, selecciona `Delete Load Balancer` y confirma los cambios.
+
+== Networking
+
+Normalmente, en OpenStack-DI los técnicos facilitan los proyectos con la infraestructura básica de red creada. Esta infraestructura básica consiste en una red para el proyecto a la que se conectarán las instancias creadas. Dicha red de proyecto se conectará a la red la UAL mediante un router virtual, que también se proporcionará configurado.
+
+=== Configuración de la infraestructura básica de red de un proyecto
+
+En OpenStack, la infraestructura básica de red para un proyecto consta de:
+
+* Red de proyecto
+* Router de proyecto conectado a red externa y a red de proyecto.
+
+Hay que seguir los pasos siguientes para realizar dicha configuración:
+
+. <<Crear red de proyecto>>
+. <<Crear router de proyecto>>
+. <<Añadir interfaz al router>>
+
+=== Crear red de proyecto
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. En el menú de la izquierda selecciona `Project | Network | Networks`.
+. Pulsa el botón `Create Network`
+. En la ficha `Network` del asistente completa el nombre de la red siguiendo la plantilla nombre del proyecto seguido de `-net`. Mantener seleccionadas las opciones `Enable Admin State` y `Create Subnet` y dejar `nova` en `Availability Zone Hints`.
+
++
+image::CreateNetwork-Name.png[]
+
+. En la ficha `Subnet` del asistente completa el nombre de la subred siguiendo la plantilla nombre del proyecto seguido de `-subnet`. En `Network Address` introducir las direcciones de la red del proyecto en formato CIDR (p.e. `10.0.0.0/24). Dejar el resto con los valores predeterminados como se muestra en la figura.
+
++
+[NOTE]
+====
+OpenStack-DI  está configurado para que las redes de proyecto que se definan tienen que ser subredes de la red `10.0.0.0/8`, definiendo un rango de direcciones comprendidas desde la `10.0.0.0` hasta la `10.255.255.255`. Para la mayoría de los casos, una red `10.0.0.0/24` es el valor más adecuado para `Network Address`.
+====
++
+image::CreateNetwork-Subnet.png[]
+
+. En la ficha `Subnet Details` del asistente deja activado `Enable DHCP` y configura los DNS que se proporcionarán a las instancias en esta red. Los DNS se introducen en `DNS Name Servers` introduciendo uno por línea en el caso de tener que introducir varios. Introduciremos al menos un DNS de la UAL (`150.214.156.2`).
+
++
+image::CreateNetwork-SubnetDetails.png[]
+
+. Pulsar `Create` en el asistente para crear la red.
+
+Una vez creada la red del proyecto, hay que crear un router para conectarla a la red de la UAL de forma que las instancias de la red del proyecto tengan puedan estar conectadas a Internet. En la sección siguiente se explica cómo configurar el router del proyecto.
+
+=== Crear router de proyecto
+
+La red de proyecto tiene que conectarse a la red de la UAL a través de un router que crearemos a continuación.
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. En el menú de la izquierda selecciona `Project | Network | Routers`.
+. Pulsa el botón `Create Router`
+. En `Router Name` introduciremos el nombre del router siguiendo la plantilla nombre del proyecto seguido de `-net` (p,e. `johndoe-net`). Mantener seleccionada la opción `Enable Admin State` y dejar `nova` en `Availability Zone Hints`.
+. En `External Network` seleccionar `ext-net` de la lista.
+
+image::CreateRouter.png[]
+
+Una vez creado el router del proyecto, falta conectarlo a la red del proyecto. Por ahora, sólo se encuentra conectado a la red de externa. Podemos comprobarlo si seleccionamos `Project | Network | Network Topology`.
+
+image::NetworkTopologyUnfinished.png[]
+
+En la sección siguiente se explica cómo terminar de configurar el router del proyecto conectándolo a la red del proyecto.
+
+=== Añadir interfaz al router
+
+Para terminar de configurar el router y la configuración de red del proyecto hay que añadir una segunda interfaz de red al router para conectarlo a la red del proyecto.
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Puedes crear la segunda interfaz de red del router de cualquiera de estas dos formas:
+* En el menú de la izquierda selecciona `Project | Network | Network Topology`. Sitúa el ratón sobre el router y selecciona el botón `Add Inteface`
++
+image::NetworkTopology-AddInterface-Topology.png[]
+* En el menú de la izquierda selecciona `Project | Network | Routers`. Haz clic sobre el enlace del router. En la ficha `Interfaces` pulsa el botón `Add Interface`.
++
+image::NetworkTopology-AddInterface-Router.png[]
+
+. En el formulario `Add Interface` selecciona la red del proyecto para que el router quede conectado a la red del proyecto a través de esta interfaz.
+
++
+image::AddInterface.png[]
+
+. Pulsa el botón `Submit` para guardar los cambios.
+
+Finalmente, podemos ver la red configurada en `Project | Network | Network Topology`.
+
+image::NetworkTopologyFinished.png[]
+
+== Operaciones extendidas sobre instancias
+
+=== Redimensionar una instancia
+
+Si una instancia necesita ampliar los recursos iniciales con los que fue creada, podemos ampliarlos cambiándole el _sabor (flavour)_.
+
+[NOTE]
+====
+Es importante que la instancia esté apagada antes de proceder a redimensionarla.
+====
+
+1. Seleccionar `Project | Compute | Instances`
+1. Desplegar el menú de acciones de la instancia a mover y seleccionar `Resize Instance`. 
+1. Seleccionar el nuevo _sabor_ en el cuadro de diálogo.
+
++
+image::ResizeInstance.png[]
+
+1. Pulsar el botón `Resize` en el asistente.
+1. Tras la ampliación, pulsar el botón `Confirm Resize/Migrate`.
+1. Iniciar la instancia con su nuevo _sabor_ pulsando el bótón `Start Instance`.
+
+=== Añadir claves SSH
+
+Hay ocasiones en las que queremos que en una instancia puedan iniciar sesión varios usuarios en una misma cuenta. Esto es especialmente útil para técnicos. En estas situaciones la instancia debe tener la clave pública de cada uno de los usuarios que vayan a acceder a ella. Esto lo podemos realizar propocionando las distintas claves públicas en el momento de la creación o a posteriori, una vez que la instancia está creada.
+
+Acceder a la clave pública a incorporar (p.e. `id_rsa.pub`) con el comando siguiente
+
+`cat ~/.ssh/id_rsa.pub`
+
+==== Añadir varias claves SSH durante la creación de una instancia
+
+Durante lo creación de una instancia, **no añadas ninguna clave durante la creación de la instancia** e introduce el código siguiente en el cuadro de texto `Customization Script` del paso `Configuration` del asistente de creación de instancias. 
+
+++++
+<script src="https://gist.github.com/ualmtorres/2b7bb36502a90bea6d0c573d2356a167.js"></script>
+++++
+
+Crea un item en `ssh_authorized_keys` con la clave pública de cada uno de los usuarios que vayan a iniciar sesión en la instancia.
+
+[CAUTION]
+====
+No introduzcas ninguna clave en el paso `Key Pair` del asistente. Añade todas las claves directamente en el paso `Configuration`.
+====
+
+==== Añadir nuevas claves SSH a una instancia existente
+
+Edita el archivo `~/.ssh/authorized_keys` y pega directamente al final del archivo las claves públicas a añadir.
+
+== Operaciones reservadas a técnicos de OpenStack-DI
+
+=== Administración de usuarios
+
+==== Restablecer contraseña
+
+Para cambiar la contraseña de un usuario, seleccionar el proyecto `admin` y mostrar la lista de usuarios seleccionando `Identity | Users`. 
+
+En el menú de acciones del usuario, seleccionar `Change Password` y completar los nuevos valores en el formulario.
+
+==== Desactivar/Activar usuario
+
+Para desactivar temporalmente la cuenta de un usuario o volver a activarla, seleccionar el proyecto `admin` y mostrar la lista de usuarios seleccionando `Identity | Users`. 
+
+En el menú de acciones del usuario, seleccionar `Disable User` o `Enable User`.
+
+==== Crear usuario
+
+. Seleccionar el menú `Identity | Users`. 
+. Pulsar el botón `Create user`
+. Completar los valores siguientes en el formulario
+.. `User Name`: Login de Campus Virtual
+.. `Description`: Nombre completo
+.. `Correo electrónico`: Dirección de correo electrónico
+.. `Contraseña`
+.. Mantener el rol `user`. Esto determinará los privilegios del usuario
+.. Si ya existe un proyecto al que vincular el usuario, seleccionarlo de la lista `Primary Project`. Si no, crearemos un proyecto nuevo sobre la marcha pulsando el botón `+` de la lista desplegable `Primary Project`.
+
++
+[NOTE]
+====
+Crear un proyecto sobre la marcha abre el Asistente para la creación de proyectos. Consulta la sección <<Crear proyecto>> para más información.
+====
+
+. Pulsar el botón `Create User` para proceder a la creación del usuario.
+
+==== Eliminar usuario
+
+Para eliminar un usuario, seleccionar el proyecto `admin` y mostrar la lista de usuarios seleccionando `Identity | Users`. 
+
+En el menú de acciones del usuario, seleccionar `Delete User` y confirmar su eliminación en el cuadro de diálogo.
+
+=== Mover instancia
+
+Para mover una instancia del servidor en el que se encuentra a otro diferente, seguir los pasos siguientes desde el proyecto `admin`:
+
+[NOTE]
+====
+Es importante que la instancia esté apagada antes de proceder a cambiarla de servidor.
+====
+
+1. Seleccionar `Admin | Compute | Instances`
+1. Desplegar el menú de acciones de la instancia a mover y seleccionar `Migrate Instance`. 
+
++
+[IMPORTANT]
+====
+No confundir la acción `Migrate Instance` con `Live Migrate Instance`. Esta última está disponible en OpenStack-DI pero no tiene funcionalidad asociada por lo que no debe usarse.
+====
+
+1. Tras unos instantes se pedirá que se confirme la migración a otro servidor
+
++
+image::ConfirmMigration.png[]
+
+1. Pulsar el botón `Confirm Resize/Migrate`.
+1. Una vez migrada la instancia a otro servidor, iniciar la instancia pulsando el bótón `Hard Reboot Instance`. La opción `Start Instance` de instancias de otros proyectos no está disponible para el usuario `admin`.
+
+=== Convertir una imagen en pública
+
+Las imágenes subidas por los usuarios son privadas y sólo son visibles en el proyecto en el que se han creado. Para convetirlas en públicas y que puedan ser usadas por otros usuarios, seguir estos pasos.
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. Comprobar que se está en el proyecto `admin`.
+. En el menú de la izquierda selecciona `Admin | Compute | Images`.
+. Selecciona la imagen a modificar, despliega el listbox de `Actions` y selecciona `Edit Image`.
+. Pulsa los botones `Public | Private` de `Visibility` en `Image Sharing`.
+. Aplica los cambios pulsando el botón `Update Image`.
+
+=== Administración de proyectos
+
+==== Crear proyecto
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. En el menú de la izquierda selecciona `Identity | Projects`.
+. Pulsa el botón `Create Project`
+. En la ficha `Project Information` del asistente completa el nombre del proyecto (p.e. el login del usuario en Campus Virtual si es un proyecto individual o cualquier otro si es un proyecto compartido).
+. Completa la descripción. Para proyectos individuales se recomienda seguir la plantilla `Proyecto de` seguido del nombre completo
+
++
+image::CreateProject-Information.png[]
+
+. En la ficha `Project Members` agrega desde la izquierda (`All Users`) los miembros del proyecto hasta que la parte derecha (`Project Members`) tenga los miembros deseados.
+
++
+image::CreateProject-Members.png[]
+
+. Pulsa `Create Project`.
+
+==== Administrar miembros
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. En el menú de la izquierda selecciona `Identity | Projects`.
+. En la lista `Projects` selecciona el proyecto al que quieras modificar sus miembros, y selecciona la opción `Manage Members` en el listbox de `Actions`.
+. En la ficha `Project Members` agrega desde la izquierda (`All Users`) los miembros del proyecto hasta que la parte derecha (`Project Members`) tenga los miembros deseados.
+. Pulsa `Save` para guardar los cambios.
+
+==== Modificar la cuota de un proyecto
+
+Los proyectos de OpenStack-DI ofrecen una cuota predetermianda de recursos de cómputo, almacenamiento y red. Es posible cambiar la cuota asignada siguiendo estos pasos:
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. En el menú de la izquierda selecciona `Identity | Projects`.
+. En la lista `Projects` selecciona el proyecto al que quieras modificar sus miembros, y selecciona la opción `Modify Quotas` en el listbox de `Actions`.
+. Configura los valores adecuados el cuadro de diálogo `Edit Quotas`.
+
++
+image::EditQuotas.png[]
+
+. Pulsa `Save` para guardar los cambios.
+
+=== Asignar IP flotante a un proyecto
+
+La red externa de OpenStack-DI tiene reservado un rango de direcciones IP para servidores a los que poder asignar nombres DNS, servidores particulares, entre otros. Así, el rango de direcciones al que se accede cuando se solicita una IP flotante es un subconjunto del conjunto total de direcciones de la red `ext-net`.
+
+Para asignar a un proyecto concreto una IP flotante del grupo de direcciones reservadas, un técnico seguirá estos pasos:
+
+. Inicia sesión en https://openstack.di.ual.es/horizon[OpenStack-DI,window=_blank].
+. En el menú de la izquierda selecciona `Admin | System | Floating IPs`.
+. Pulsa el botón `Allocate IP to Project`
+. En el cuadro de diálogo seleccionar el proyecto al que asignar la IP flotante, indicar la IP a asignar y proporcionar una descripción.
+
+image::AllocateFloatingIPAdmin.png[]
+
+Tras estos pasos, el proyecto de destino tendrá adjudicada esa IP flotante para usarla convenientemente
 == Recursos complementarios
 
 * https://www.youtube.com/playlist?list=PLoS04oY1FHPP54bnjbp7Iy31ncqhvc41X[Videotutoriales en YouTube sobre recursos y uso de OpenStack-DI,window=_blank]
